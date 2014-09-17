@@ -14,37 +14,24 @@ require_once("LoginView.php");
 
 		public function doControll() {
 
-			if($this->model->didUserTryLogin()) {
+			if($this->model->isUserLoggedIn()){
+				//Visa inloggad sida
+				$_SESSION['isUserLoggedIn'] = true;
 
-				$keepSignedIn = $this->model->didUserCheckBox();
-
-				if($keepSignedIn == true) {
-					$keepSignedInStr = "Vi kommer att hålla dig inloggad.";
+				if($this->model->isUserPersistantLoggedIn()){
+					//Visa meddelande "user persistant Logged in"
+					return $this->model->getLoggedInPage("User is persistant logged in.");
 				} else {
-					$keepSignedInStr = "";
+					//Visa inget meddelande.
+					return $this->model->getLoggedInPage("");
 				}
 
-				$didUserPassLogin = $this->model->authenticateUser();
-
-				if($didUserPassLogin) {
-					//Show logged in page
-					return $this->model->getLoggedInPage($keepSignedInStr);
-				} else {
-					//Show failed login
-					return $this->model->getLogInForm("Wrong username or password");
-				}
-
-				$didUserPassLogin = false;
-
-				$_POST["tryLogin"] = false;
 			} else {
-				if($this->model->isUserLoggedIn()){
-					if($this->model->isUserPersistantLoggedIn()){
-						return $this->model->getLoggedInPage("Vi kommer att hålla dig inloggad...");
-					} else {
-						return $this->model->getLoggedInPage("user not persistant logged in");						
-					}
+				if($this->model->didUserPostLoginForm()) {
+					//visa felmeddelande
+					return $this->model->getLogInForm("Wrong password or username");
 				} else {
+					//visa formulär
 					return $this->model->getLogInForm("");
 				}
 			}
