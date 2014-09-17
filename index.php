@@ -1,13 +1,18 @@
 <?php
 
 	require_once("HTMLView.php");
-	require_once("Form.php");
-	require_once("formView.php");
+	require_once("LoginController.php");
+	require_once("LoginView.php");
+	require_once("LoginModel.php");
+
+	session_start();
+
+
+
+	$controller = new LoginController();
+
+	$htmlBody = $controller->doControll();
 
 	$view = new HTMLView();
-
-	$vfc = new \controller\Form();
-
-	$htmlBody = $vfc->doControll();
-
 	$view->echoHTML($htmlBody);
+
