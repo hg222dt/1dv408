@@ -45,7 +45,9 @@
 			$ret ="
 				<h1>Inloggad!</h1>
 				<h2>$msgStr</h2>
-				<a href=''>Logga ut knapp. säger vi.</a>
+				<form action='' method='post'>
+				<input type='submit' value='Logga ut!' name='logUserOff'>
+				</form>
 			";
 
 			return $ret;
@@ -94,9 +96,17 @@
 		}
 
 		public function isUserPersistantLoggedIn() {
-				if (isset($_SESSION['isUserPersistantLoggedIn']) && $_SESSION['isUserPersistantLoggedIn'] == true) {
+				if ((isset($_SESSION['isUserPersistantLoggedIn']) && $_SESSION['isUserPersistantLoggedIn'] == true) && $this->isUserLoggedOf() == false) {
 				return true;
 			}			
+			return false;
+		}
+
+		public function isUserLoggedOf() {
+			if(isset($_POST['logUserOff'])) {
+				$_SESSION['isUserPersistantLoggedIn'] = false;
+				return true;
+			}
 			return false;
 		}
 	}
