@@ -42,6 +42,9 @@
 		}
 
 		public function getLoggedInPage($msgStr){
+
+			$_SESSION['userIsLoggedOf'] = false;
+
 			$ret ="
 				<h1>Inloggad!</h1>
 				<h2>$msgStr</h2>
@@ -96,17 +99,25 @@
 		}
 
 		public function isUserPersistantLoggedIn() {
-				if ((isset($_SESSION['isUserPersistantLoggedIn']) && $_SESSION['isUserPersistantLoggedIn'] == true) && $this->isUserLoggedOf() == false) {
+				if (isset($_SESSION['isUserPersistantLoggedIn']) && $_SESSION['isUserPersistantLoggedIn'] == true) {
 				return true;
 			}			
 			return false;
 		}
 
+		public function isUserLoggedIn() {
+				if ($this->isUserLoggedOf() == false) {
+					return true;
+				} 		
+			return false;
+		}
+
 		public function isUserLoggedOf() {
-			if(isset($_POST['logUserOff'])) {
+			if(isset($_POST['logUserOff']) || $_SESSION['userIsLoggedOf'] == true) {
 				$_SESSION['isUserPersistantLoggedIn'] = false;
+				$_SESSION['userIsLoggedOf'] = true;
 				return true;
-			}
+			} 
 			return false;
 		}
 	}

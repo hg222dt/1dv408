@@ -38,8 +38,12 @@ require_once("LoginView.php");
 
 				$_POST["tryLogin"] = false;
 			} else {
-				if($this->model->isUserPersistantLoggedIn()){
-					return $this->model->getLoggedInPage("Vi kommer att hålla dig inloggad...");
+				if($this->model->isUserLoggedIn()){
+					if($this->model->isUserPersistantLoggedIn()){
+						return $this->model->getLoggedInPage("Vi kommer att hålla dig inloggad...");
+					} else {
+						return $this->model->getLoggedInPage("user not persistant logged in");						
+					}
 				} else {
 					return $this->model->getLogInForm("");
 				}
