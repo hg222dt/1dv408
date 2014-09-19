@@ -12,28 +12,29 @@ require_once("LoginView.php");
 			$this->view = new LoginView($this->model);
 		}
 
-		public function doControll() {
+		public function showSite() {
 
-			if($this->model->isUserLoggedIn()){
-				//Visa inloggad sida
-				$_SESSION['isUserLoggedIn'] = true;
+			$loginMessage = "";
 
-				if($this->model->isUserPersistantLoggedIn()){
-					//Visa meddelande "user persistant Logged in"
-					return $this->model->getLoggedInPage("User is persistant logged in.");
+			if($this->view->didUserPostForm()){
+				if($this->view->didUSerSucessfullyLogOn()) {
+					$_SESSION['userLoggedOn'] = true;
+					$loginMessage = "";
 				} else {
-					//Visa inget meddelande.
-					return $this->model->getLoggedInPage("");
+					//sök upp vad felet är. fattas användarnamn eller/och lösenord. sätt variabel till detta.
+					$loginMessage = $this->view->howDidUserFailLogin();
 				}
+			}
 
+			if($this->view->didUserPressLogoff()) {
+				$_SESSION['userLoggedOn'] = false;
+			}
+
+
+			if($this->model->isUserLoggedOn()) {
+				return $this->model->getLoggedInPage("");
 			} else {
-				if($this->model->didUserPostLoginForm()) {
-					//visa felmeddelande
-					return $this->model->getLogInForm("Wrong password or username");
-				} else {
-					//visa formulär
-					return $this->model->getLogInForm("");
-				}
+				return $this->model->getLoginForm($loginMessage);
 			}
 		}
 	}

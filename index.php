@@ -11,7 +11,7 @@
 
 	$controller = new LoginController();
 
-	$htmlBody = $controller->doControll();
+	$htmlBody = $controller->showSite();
 
 	$view = new HTMLView();
 	$view->echoHTML($htmlBody);

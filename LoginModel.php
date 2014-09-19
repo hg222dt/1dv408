@@ -2,9 +2,6 @@
 
 	class LoginModel {
 
-		//Ska tillhandhålpla login information för respktive användaref
-		//Ska tillhanda hålla okm respetktiveanvändare har sparat sin inkoggningsssession.
-
 		public function __construct() {
 
 		}
@@ -43,8 +40,6 @@
 
 		public function getLoggedInPage($msgStr){
 
-			$_SESSION['userIsLoggedOf'] = false;
-
 			$ret ="
 				<h1>Inloggad!</h1>
 				<h2>$msgStr</h2>
@@ -57,15 +52,12 @@
 
 		}
 
-		public function getFailedLogin() {
-			return "Failed Login";
-		}
-
 		public function getDateTime() {
 			setlocale(LC_ALL,"sv");
 			return ucfirst(utf8_encode(strftime("%A, den %d %B år %Y. Klockan är [%X]")));
 		}
 
+/*
 		public function didUserCheckBox() {
 			if (isset($_POST['KeepSignedIn']) && $_POST['KeepSignedIn'] == true) {
 				$_SESSION["isUserPersistantLoggedIn"] = true;
@@ -73,37 +65,7 @@
 			}
 			return false;
 		}
-
-		public function authenticateUser() {
-
-			if ($_POST['Username'] != 'hej') {
-				return false;
-			}
-
-			if($_POST['Password'] != "hej") {
-				return false;
-			}  
-
-			if($_POST['Username'] == 'hej' && $_POST['Password'] == "hej") {
-				return true;
-			}
-
-			return false;
-		}
-
-		public function isUserLoggedIn() {
-			if($this->didUserPostLoginForm()) {
-				return $this->authenticateUser();
-			} else {
-				if($this->didUserPressLogOff()) {
-					$_SESSION['isUserLoggedIn'] = false;
-					return false;
-				} else if (isset($_SESSION['isUserLoggedIn']) && $_SESSION['isUserLoggedIn'] == true) {
-					return true;
-				}
-			}
-		}
-
+*/
 		public function isUserPersistantLoggedIn() {
 			if(isset($_POST['KeepSignedIn'])){
 				$_SESSION['isUserPersistantLoggedIn'] = true;
@@ -113,25 +75,19 @@
 					return true;
 				}
 				return false;
-			}
-
-			
+			}			
 		}
 
-		public function didUserPostLoginForm(){
-			if(isset($_POST['loginFormPosted'])) {
+		public function isUserLoggedOn() {
+			if((isset($_SESSION['userLoggedOn']) && $_SESSION['userLoggedOn'] == true)) {
 				return true;
 			}
-			return false;
 		}
 
-		public function didUserPressLogOff(){
-			if(isset($_POST['userPressedLogOff'])){
-				$_SESSION['isUserPersistantLoggedIn'] = false;
-				return true;
-			}
-			return false;
+		public function setSessionUsername($username) {
+			$_SESSION['Username'] = $username;
 		}
 
+		
 
 	}
