@@ -17,7 +17,7 @@ require_once("LoginView.php");
 			$loginMessage = "";
 
 			if($this->view->didUserPostForm()){
-				if($this->view->didUSerSucessfullyLogOn()) {
+				if($this->view->didUSerSucessfullyLogOn($this->model->getLoginCredentials())) {
 					$_SESSION['userLoggedOn'] = true;
 					$loginMessage = "";
 				} else {
@@ -32,9 +32,9 @@ require_once("LoginView.php");
 
 
 			if($this->model->isUserLoggedOn()) {
-				return $this->model->getLoggedInPage("");
+				return $this->view->showLoggedInPage("");
 			} else {
-				return $this->model->getLoginForm($loginMessage);
+				return $this->view->showLoginForm($loginMessage);
 			}
 		}
 	}
