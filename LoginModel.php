@@ -47,6 +47,10 @@
 			$_SESSION['Username'] = $username;
 		}
 
+		public function getSessionUsername() {
+			return $_SESSION['Username'];
+		}
+
 		public function getLoginCredentials() {
 			return $this->loginCredentials->credentials;
 		}

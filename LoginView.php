@@ -58,17 +58,17 @@
 
 		public function howDidUserFailLogin() {
 			if((isset($_POST['Username']) && $_POST['Username'] == "") && (isset($_POST['Password']) && $_POST['Password'] == "")) {
-				return "Both username and password are missing";
+				return "Username is missing.";
 			} else if((isset($_POST['Username']) && $_POST['Username'] == "") && (isset($_POST['Password']) && $_POST['Password'] != "")) {
 				return "Username is missing";
 			} else if((isset($_POST['Username']) && $_POST['Username'] != "") && (isset($_POST['Password']) && $_POST['Password'] == "")) {
 				return "Password is missing";
 			} else if ((isset($_POST['Username']) && $_POST['Username'] != $usernameInput) && (isset($_POST['Password']) && $_POST['Password'] == $passwordInput)) {
 				//fel användarnamn
-				return "Wrong username.";
+				return "Wrong username or/and password.";
 			} else if ((isset($_POST['Username']) && $_POST['Username'] == $usernameInput) && (isset($_POST['Password']) && $_POST['Password'] != $passwordInput)) {
 				//Fel lösenord
-				return "Wrong password.";
+				return "Wrong username or/and password.";
 			} else {
 				//Fel båda
 				return "Both username and password is incorrect.";
@@ -102,7 +102,7 @@
 			}
 
 			$ret ="
-				<h1>Inloggning</h1>
+				<h1>Laborationskod hg222dt</h1>
 <h2>Ej inloggad</h2>
 <form action='' method='post'>
 	<fieldset>
@@ -129,10 +129,11 @@
 
 		public function showLoggedInPage($msgStr){
 
+			$username = $this->model->getSessionUsername();
 			
 
 			$ret ="
-				<h1>Inloggad!</h1>
+				<h1>$username är inloggad!</h1>
 				<h2>$msgStr</h2>
 				<form action='' method='post'>
 				<input type='submit' value='Logga ut!' name='userPressedLogOff'>
