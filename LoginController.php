@@ -5,36 +5,93 @@ require_once("LoginView.php");
 	class LoginController {
 
 		private $model;
+
 		private $view;
+
+		public $loggedInMessage;
+
+		public $loginFormMessage;
+
+		private $userLoggesOnByCookie;
+
+		private $firstLoad;
+
+		private $loggedInByCookie;
 
 		public function __construct() {
 			$this->model = new LoginModel();
 			$this->view = new LoginView($this->model);
+			$this->loggedInMessage = "";
+			$this->firstLoad = true;
+			$this->loggedInByCookie = false;
 		}
 
 		public function showSite() {
 
-			$loginMessage = "";
+			//$this->loggedInMessage = "";
 
-			if($this->view->didUserPostForm()){
+			//Har användaren postat login-formulär?
+			if($this->view->didUserPostForm()) {
 				if($this->view->didUSerSucessfullyLogOn($this->model->getLoginCredentials())) {
 					$_SESSION['userLoggedOn'] = true;
-					$loginMessage = "";
+					
+					if($this->view->didUserPressKeepSignedIn()) {
+						$this->bakeCookies();
+						$this->loggedInByCookie = true;
+						$this->loggedInMessage = "Inloggning lyckades och vi kommer ihåg dig nästa gång.";
+					}
 				} else {
-					//sök upp vad felet är. fattas användarnamn eller/och lösenord. sätt variabel till detta.
-					$loginMessage = $this->view->howDidUserFailLogin();
+					$this->loginFormMessage = $this->view->howDidUserFailLogin();
 				}
 			}
 
+			//Om användaren tryckte på logoff-knappen
 			if($this->view->didUserPressLogoff()) {
 				$_SESSION['userLoggedOn'] = false;
+
+				$this->model->deleteSecureIdentifier($this->view->getCookieUsername());
 			}
 
+			//Har användaren loggat på med cookie?
+			if($this->model->isUserLoggedOn() == false){
+				if(($this->view->isUserLoggedOnByCookie($this->view->getCookieUsername(), $this->view->getCookiePassword()) && !$this->view->didUserPressLogoff())) {
+					$this->userLoggesOnByCookie = true;
+					$_SESSION['userLoggedOn'] = true;
+				
+				//Om inte cookien är korrekt	
+				} else if (!($this->view->isUserLoggedOnByCookie($this->view->getCookieUsername(), $this->view->getCookiePassword()))) {
+					if(!($this->view->didUserPressLogoff()) && !($this->view->didUserPostForm())) {
+						//$this->loggedInMessage = "Felaktig information i cookie.";
+						setcookie("loggedInUsername", "", -1);
+						setcookie("loggedInPassword", "", -1);
+					}
+				}
+			}
 
 			if($this->model->isUserLoggedOn()) {
-				return $this->view->showLoggedInPage("");
+
+				if(isset($_COOKIE['loggedInUsername'])){
+					$this->model->setSessionUsername($_COOKIE['loggedInUsername']);
+				}
+
+//				$msgStr = $this->loggedInMessage;
+//				$this->loggedInMessage = "";
+
+				return $this->view->showLoggedInPage($this->loggedInMessage);
 			} else {
-				return $this->view->showLoginForm($loginMessage);
+				$msgStr = $this->loginFormMessage;
+				$this->loginFormMessage = "";
+
+				return $this->view->showLoginForm($msgStr);
 			}
 		}
+
+		public function bakeCookies() {
+			$hashedPassword = $this->view->getHashedPassword();
+			$this->view->createCookies($this->view->getPostedUsername(), $hashedPassword);
+
+			$secureIdentifier = $this->view->createSecureIdentifier($hashedPassword);
+			$this->model->saveSecureIdentifier($secureIdentifier);
+		}
+
 	}
