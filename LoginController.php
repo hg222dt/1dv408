@@ -57,6 +57,7 @@ require_once("LoginView.php");
 				if(($this->view->isUserLoggedOnByCookie($this->view->getCookieUsername(), $this->view->getCookiePassword()) && !$this->view->didUserPressLogoff())) {
 					$this->userLoggesOnByCookie = true;
 					$_SESSION['userLoggedOn'] = true;
+					$this->loggedInMessage = "Användaren loggade in med hjälp av cookie";
 				
 				//Om inte cookien är korrekt	
 				} else if (!($this->view->isUserLoggedOnByCookie($this->view->getCookieUsername(), $this->view->getCookiePassword()))) {
