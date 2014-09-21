@@ -3,6 +3,6 @@
 
 	class UserCredentialsModel {
 
-		public $credentials = array("hej" => "hej", "hejhej" => "hejhej");
+		public $credentials = array("Admin" => "Password", "hejhej" => "hejhej");
 
 	}
