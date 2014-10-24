@@ -5,17 +5,11 @@ require_once("LoginView.php");
 	class LoginController {
 
 		private $model;
-
 		private $view;
-
 		public $loggedInMessage;
-
 		public $loginFormMessage;
-
 		private $userLoggesOnByCookie;
-
 		private $firstLoad;
-
 		private $loggedInByCookie;
 
 		public function __construct() {
@@ -28,6 +22,76 @@ require_once("LoginView.php");
 
 		public function showSite() {
 
+			//Actions
+			$userLogsOut = 1;
+			$userLogsInDefault = 2;
+			$userLoggedOnByCookie = 3;
+
+			$userLogsOnKeepSignedIn = 4;
+			$userLogsOnNotKeep = 5;
+			$userFailedLogin = 6;
+			$userDefaultLoadForm = 7;
+
+
+			$action = $this->view->getUserAction();
+
+			switch ($action) {
+
+				case $userLogsOut:
+					$this->view->feedbackMsg = "User logged out.";
+					$this->model->deleteSecureIdentifier($this->view->getCookieUsername());
+					$this->model->deleteUserCookies();
+					$this->model->setUserLoggedOff();
+					$this->model->setSessionUsername("");
+					return $this->view->showLoginForm();
+					break;
+
+				case $userLogsInDefault:
+					$this->view->feedbackMsg = "User logged in default";
+					return $this->view->showLoggedInPage();
+					break;
+
+				case $userLoggedOnByCookie:
+					$this->view->feedbackMsg = "User logged in by cookie";
+					$this->model->setSessionUsername($_COOKIE['loggedInUsername']);
+					$this->userLoggesOnByCookie = true;
+					$this->model->setUserLoggedOn();
+					return $this->view->showLoggedInPage();
+					break;
+
+				case $userLogsOnKeepSignedIn:
+					$this->view->feedbackMsg = "User logged in and will be kept logged on.";
+					$this->model->setUserLoggedOn();
+					$this->view->bakeNewCookies();
+					$this->loggedInByCookie = true;
+					return $this->view->showLoggedInPage();
+					break;
+
+				case $userLogsOnNotKeep:
+					$this->view->feedbackMsg = "User logged on without persistant logIn";
+					$this->model->setUserLoggedOn();
+					return $this->view->showLoggedInPage();
+					break;
+
+				case $userFailedLogin:
+					$this->view->feedbackMsg = $this->view->howDidUserFailLogin();
+					return $this->view->showLoginForm();
+					break;
+
+				case $userDefaultLoadForm:
+					$this->view->feedbackMsg = "Go ahead fill in your credentials!";
+					return $this->view->showLoginForm();					
+					break;
+
+				default:
+					break;
+			}
+			
+
+
+
+/*
+
 			//$this->loggedInMessage = "";
 
 			//Har användaren postat login-formulär?
@@ -36,7 +100,7 @@ require_once("LoginView.php");
 					$_SESSION['userLoggedOn'] = true;
 					
 					if($this->view->didUserPressKeepSignedIn()) {
-						$this->bakeCookies();
+						$this->view->bakeNewCookies();
 						$this->loggedInByCookie = true;
 						$this->loggedInMessage = "Inloggning lyckades och vi kommer ihåg dig nästa gång.";
 					}
@@ -85,14 +149,8 @@ require_once("LoginView.php");
 
 				return $this->view->showLoginForm($msgStr);
 			}
-		}
 
-		public function bakeCookies() {
-			$hashedPassword = $this->view->getHashedPassword();
-			$this->view->createCookies($this->view->getPostedUsername(), $hashedPassword);
-
-			$secureIdentifier = $this->view->createSecureIdentifier($hashedPassword);
-			$this->model->saveSecureIdentifier($secureIdentifier);
+			*/
 		}
 
 	}

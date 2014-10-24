@@ -6,13 +6,13 @@
 
 		private $model;
 		private $loginCredentials;
-
 		private $passwordInput;
 		private $usernameInput;
-
 		private $cookieStorage;
-
 		private $usernamePlaceholder = "";
+		private $usrAction;
+		public $feedbackMsg;
+		private $timestamp;
 
 		public function __construct(LoginModel $model) {
 			$this->model = $model;
@@ -25,13 +25,14 @@
 			$this->usernameInput = $_POST['Username'];
 			$this->passwordInput = $_POST['Password'];
 
-
-
 			foreach($this->loginCredentials as $username => $password) {
+
 				if($username == $_POST['Username']) {
 					if($password == $_POST['Password']) {
 						//Användaren har angivit allt korrekt
 						$this->model->setSessionUsername($username);
+						$_SESSION['userLoggedOn'] = true;
+						$_SESSION['userAgent'] = $_SERVER["HTTP_USER_AGENT"];
 						return true;
 					}
 				}
@@ -68,17 +69,15 @@
 			return false;
 		}
 
-		public function showLogInForm($logInMsg) {
+		public function getFeedback() {
+			return $this->feedbackMsg;
+		}
+
+		public function showLogInForm() {
 
 			$_usernamePlaceholder = $this->usernamePlaceholder;
 
 			$dateTimeStr = $this->model->getDateTime();
-
-			if($logInMsg !== "") {
-				$logInMsgStr = "<p>$logInMsg<p>";
-			} else {
-				$logInMsgStr = "";
-			}
 
 			$ret ="
 				<h1>Laborationskod hg222dt</h1>
@@ -86,7 +85,7 @@
 <form action='' method='post'>
 	<fieldset>
 		<legend>Logga in med användarnamn och lösenord</legend>
-		$logInMsgStr
+		<p>".$this->getFeedback()."</p>
 		<label for='usrnameId'>Username</label>
 		<input type='text' id='usrnameId' size='20' name='Username' value='$_usernamePlaceholder'>
 		<label for='passwordId'>Password</label>
@@ -99,23 +98,23 @@
 <p>$dateTimeStr</p>
 			";
 
-			if($this->didUserPressLogOff()) {
+/*			if($this->didUserPressLogOff()) {
 				header('Location: ' . $_SERVER['PHP_SELF']);
 				setcookie("loggedInUsername", "", -1);
 				setcookie("loggedInPassword", "", -1);
 			}
-
+*/
 			return $ret;
 		}
 
-		public function showLoggedInPage($msgStr){
+		public function showLoggedInPage(){
 
 			$username = $this->model->getSessionUsername();
 			$dateTimeStr = $this->model->getDateTime();
 
 			$ret ="
 				<h1>$username är inloggad!</h1>
-				<h2>$msgStr</h2>
+				<h2>".$this->getFeedback()."</h2>
 				<form action='' method='post'>
 				<input type='submit' value='Logga ut!' name='userPressedLogOff'>
 				</form>
@@ -143,26 +142,56 @@
 			} 
 		}
 
+		public function getUserAction() {
+
+			//Om anändaren är inloggad
+			if($this->model->isUserLoggedOn()) {
+				//Om användaren valt att logga ut
+				if($this->didUserPressLogoff()) {
+					$this->usrAction = 1;
+				} 
+
+				//Om användaren loggar in
+				else {
+					$this->usrAction = 2;
+				}
+			}
+
+			else {
+				//Om användaren har sparat sin inloggning
+				if($this->isUserLoggedOnByCookie($this->getCookieUsername(), $this->getCookiePassword()) && $this->didUserPressLogoff() !== true) {
+					$this->usrAction = 3;
+				}
+				//Om användaren har postat login-formulär
+				else if($this->didUserPostForm()) {
+
+					//Om användaren lyckas med inloggning
+					if($this->didUserSucessfullyLogOn($this->model->getLoginCredentials())) {
+						if($this->didUserPressKeepSignedIn()){
+							$this->usrAction = 4;
+						} else {
+							$this->usrAction = 5;
+						}
+					}
+
+					//Om användaren misslyckas med inloggning
+					else {
+						$this->usrAction = 6;
+					}
+				}
+				//Om användaren bara laddar sidan och ska se registreringsformulär
+				else {
+					$this->usrAction = 7;
+				}
+			}
+
+			return $this->usrAction;
+		}
+
+
 		//cookie stuff
 
-		public function getHashedPassword() {
-			return crypt($_POST['Password']);
-		}
-
-		public function createSecureIdentifier($hashedPassword) {
-			return $_POST['Username'] . "," . md5($hashedPassword . $_COOKIE['timestamp'] . $_SERVER['REMOTE_ADDR']);
-		}
-
-		public function createSecureIdentifierForVerif($hashedPassword, $username) {
-			return $username . "," . md5($hashedPassword . $_COOKIE['timestamp'] . $_SERVER['REMOTE_ADDR']);
-		}
-
-		public function createCookies($username, $hashedPassword) {
-			$timestamp = time() + 1200;
-			setcookie("timestamp", $timestamp, $timestamp);
-			setcookie("loggedInUsername", $username, $timestamp);
-			setcookie("loggedInPassword", $hashedPassword, $timestamp);
-		}
+		
 
 		public function getCookieUsername() {
 			if(isset($_COOKIE['loggedInUsername']))
@@ -176,8 +205,8 @@
 
 		public function isUserLoggedOnByCookie($username, $password) {
 			if($this->doesCookieUsernameAndPasswordExist($username, $password)) {
-				$verificationToken =  $this->createSecureIdentifierForVerif($password, $username);
 
+				$verificationToken =  $this->createSecureIdentifierForVerif($password, $username);
 				$this->temp1 = $verificationToken;
 
 				if($this->model->verifyCookieCredentials($verificationToken)) {
@@ -191,5 +220,33 @@
 				return true;
 			}
 			return false;
+		}
+
+		public function bakeNewCookies() {
+
+			$hashedPassword = $this->getHashedPassword();
+			$this->createCookies($this->getPostedUsername(), $hashedPassword);
+
+			$secureIdentifier = $this->createSecureIdentifier($hashedPassword);
+			$this->model->saveSecureIdentifier($secureIdentifier);
+		}
+
+		public function getHashedPassword() {
+			return md5($_POST['Password']);
+		}
+
+		public function createSecureIdentifier($hashedPassword) {
+			return $_POST['Username'] . "," . $hashedPassword . "," . $this->timestamp . "," . $_SERVER['REMOTE_ADDR'];
+		}
+
+		public function createSecureIdentifierForVerif($hashedPassword, $username) {
+			return $_COOKIE['loggedInUsername'] . "," . $hashedPassword . "," . $this->timestamp . "," . $_SERVER['REMOTE_ADDR'];
+		}
+
+		public function createCookies($username, $hashedPassword) {
+			$this->timestamp = time() + 1200;
+			setcookie("timestamp", $this->timestamp, $this->timestamp);
+			setcookie("loggedInUsername", $username, $this->timestamp);
+			setcookie("loggedInPassword", $hashedPassword, $this->timestamp);
 		}
 	}

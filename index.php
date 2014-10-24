@@ -16,3 +16,4 @@
 	$view = new HTMLView();
 	$view->echoHTML($htmlBody);
 
+	

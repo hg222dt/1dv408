@@ -18,6 +18,13 @@
 			return utf8_encode(ucfirst(strftime("%A"))) . ', den ' . date('d F') . ' år ' . date('Y') . '. Klockan är [' . date('H:i:s') . ']';
 		}
 
+		public function setUserLoggedOff() {
+			$_SESSION['userLoggedOn'] = false;
+		}
+
+		public function setUserLoggedOn() {
+			$_SESSION['userLoggedOn'] = true;
+		}
 /*
 		public function didUserCheckBox() {
 			if (isset($_POST['KeepSignedIn']) && $_POST['KeepSignedIn'] == true) {
@@ -40,9 +47,17 @@
 		}
 
 		public function isUserLoggedOn() {
-			if((isset($_SESSION['userLoggedOn']) && $_SESSION['userLoggedOn'] == true)) {
+			if((isset($_SESSION['userLoggedOn']) && $_SESSION['userLoggedOn'] == true) && $this->doUsrAgentControll()) {
 				return true;
 			}
+		}
+
+		public function doUsrAgentControll() {
+			if ($_SESSION['userAgent'] === $_SERVER["HTTP_USER_AGENT"]) {
+				return true;
+			}
+
+			return false;
 		}
 
 		public function doesUsernameCookieExist() {
@@ -87,7 +102,6 @@
 
 					// TRIMMA ALLT FRAM TILL KOMMAT
 					$trimmedLine = substr($line, 0, strpos($line, ","));
-					var_dump($trimmedLine);
 
 					if (!(preg_match("/\b".preg_quote($username)."\b/i", $trimmedLine))) {
     					$content .= $line . "\n";
@@ -102,7 +116,11 @@
 
 		public function verifyCookieCredentials($verificationToken) {
 
-			$verificationToken = $verificationToken;
+			$incomingToken = explode(",", $verificationToken);
+
+			$incomingPass = $incomingToken[1];
+			$incomingExpiration = $incomingToken[2];
+			$incomingRemoteAddr = $incomingToken[3];
 
 			$lines = @file("secureIdentifiers.txt");
 			
@@ -112,12 +130,24 @@
 				foreach ($lines as $line) {
 					$line = trim($line);
 
-					if (strcmp($verificationToken, $line)) {
+					$lineParts = explode(",", $line);
+
+					$existingPass = $lineParts[1];
+					$existingExpiration = $lineParts[2];
+					$existingRemoteAddr = $lineParts[3];
+
+					if (strcmp($existingPass, $incomingPass) === 0 && 
+						strcmp($existingRemoteAddr, $incomingRemoteAddr) === 0) {
 						return true;
 					}
 				}
 				
 				return false;
 			}
+		}
+
+		public function deleteUserCookies() {
+			setcookie("loggedInUsername", "", -1);
+			setcookie("loggedInPassword", "", -1);
 		}
 	}
